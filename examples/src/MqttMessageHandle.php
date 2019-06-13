@@ -38,7 +38,13 @@ class MqttMessageHandle implements MessageHandler
 
     public function publish(MQTT $mqtt, Message\PUBLISH $publish_object)
     {
-        print_r(["qos"=>$publish_object->getQos(),"ret"=>$publish_object->getRetain(),'publish'=>$publish_object->getMessage(),"msgid"=>$publish_object->getMsgID()]);
+        print_r([
+            "qos" => $publish_object->getQos(),
+            "ret" => $publish_object->getRetain(),
+            'publish' => $publish_object->getMessage(),
+            "msgid" => $publish_object->getMsgID(),
+            "topic" => $publish_object->getTopic()
+        ]);
     }
 
     public function puback(MQTT $mqtt, Message\PUBACK $puback_object)

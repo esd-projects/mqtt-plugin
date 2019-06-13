@@ -76,7 +76,7 @@ class MqttPack implements IPack, IMqtt
             $message->setDup(0);
             $message->setQos($this->mqttConfig->getServerQos());
             if ($topic == null && $this->mqttConfig->isUseRoute()) {
-                $message->setTopic($this->mqttConfig->getServerTopic());
+                $message->setTopic($this->mqttConfig->getServerTopic() . "/" . getContextValue("uid"));
                 $message->setQos(getContextValue("qos"));
                 $message->setMsgID(getContextValue("msgId"));
             }
@@ -98,6 +98,7 @@ class MqttPack implements IPack, IMqtt
     public function unPack(int $fd, string $data, PortConfig $portConfig): ?ClientData
     {
         $uid = $this->getFdUid($fd);
+        setContextValue("uid", $uid);
         $message_object = $this->message_read($data);
         switch ($message_object->getMessageType()) {
             case Message::CONNECT:
@@ -108,6 +109,7 @@ class MqttPack implements IPack, IMqtt
                         list($auth, $uid) = $this->mqttAuth->auth($fd, $connect->username, $connect->password);
                         if ($auth) {
                             $this->bindUid($fd, $uid);
+                            setContextValue("uid", $uid);
                             $connack->setReturnCode(0);
                             $connack->setSessionPresent(0);
                             $this->autoBoostSend($fd, $connack);
@@ -129,7 +131,9 @@ class MqttPack implements IPack, IMqtt
                                 $connect->client_id = Utility::genClientId();
                             }
                             $connack->setReturnCode(0);
-                            $this->bindUid($fd, $connect->client_id);
+                            $uid = $connect->client_id;
+                            $this->bindUid($fd, $uid);
+                            setContextValue("uid", $uid);
                         } else {
                             $connack->setReturnCode(0x05);
                         }
