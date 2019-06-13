@@ -1,0 +1,31 @@
+{
+  "require": {
+    "esd/esd-core": "~0.1",
+    "esd/pack-plugin": "~0.1",
+    "esd/uid-plugin": "~0.1",
+    "esd/topic-plugin": "~0.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "ESD\\Plugins\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "tmtbe",
+      "email": "896369042@qq.com",
+      "homepage": "https://github.com/tmtbe"
+    }
+  ],
+  "name": "esd/mqtt-plugin",
+  "type": "library",
+  "keywords": ["server", "swoole"],
+  "description": "mqtt-plugin",
+  "license": "MIT",
+  "repositories": {
+    "packagist": {
+      "type": "composer",
+      "url": "https://packagist.laravel-china.org"
+    }
+  }
+}
