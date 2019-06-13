@@ -13,3 +13,5 @@ esd:
       open_mqtt_protocol: true
       pack_tool: ESD\Plugins\MQTT\MqttPack
       sock_type: 1
+mqtt:
+  use_route: true
