@@ -17,5 +17,8 @@ $mqtt2 = new MQTT("localhost:8090");
 $mqtt2->setHandler($messageHandle);
 $mqtt2->connectAndLoop();
 
-$mqtt2->publish("test", "test");
+$msg = $mqtt2->publish("test", "test",1);
+print_r($msg);
+$msg = $mqtt2->publish("test", "test",1);
+print_r($msg);
 

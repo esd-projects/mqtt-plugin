@@ -21,6 +21,11 @@ class MqttPluginConfig extends BaseConfig
      */
     protected $allowAnonymousAccess = true;
     /**
+     * 服务器发出消息的服务等级
+     * @var int
+     */
+    protected $serverQos = 0;
+    /**
      * 连接验证类
      * @var string
      */
@@ -104,5 +109,21 @@ class MqttPluginConfig extends BaseConfig
     public function setServerTopic(string $serverTopic): void
     {
         $this->serverTopic = $serverTopic;
+    }
+
+    /**
+     * @return int
+     */
+    public function getServerQos(): int
+    {
+        return $this->serverQos;
+    }
+
+    /**
+     * @param int $serverQos
+     */
+    public function setServerQos(int $serverQos): void
+    {
+        $this->serverQos = $serverQos;
     }
 }

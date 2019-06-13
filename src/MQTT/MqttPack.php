@@ -73,11 +73,13 @@ class MqttPack implements IPack, IMqtt
             $data = $data->build();
         } else {
             $message = new Message\PUBLISH($this);
+            $message->setDup(0);
+            $message->setQos($this->mqttConfig->getServerQos());
             if ($topic == null && $this->mqttConfig->isUseRoute()) {
                 $message->setTopic($this->mqttConfig->getServerTopic());
+                $message->setQos(getContextValue("qos"));
+                $message->setMsgID(getContextValue("msgId"));
             }
-            $message->setDup(0);
-            $message->setQos(0);
             $message->setMessage($data);
             $data = $message->build();
         }
@@ -145,22 +147,24 @@ class MqttPack implements IPack, IMqtt
                     $msgId = $publish->getMsgID();
                     if (!$this->mqttConfig->isUseRoute()) {
                         $this->pub($topic, $data);
+                        switch ($qos) {
+                            case 1:
+                                $puback = new PUBACK($this);
+                                $puback->setMsgID($msgId);
+                                $this->autoBoostSend($fd, $puback);
+                                break;
+                            case 2:
+                                $pubrec = new PUBREC($this);
+                                $pubrec->setMsgID($msgId);
+                                $this->autoBoostSend($fd, $pubrec);
+                                break;
+                        }
                     } else {
                         //这里将会当做路由信息
                         $clientData = new ClientData($fd, $portConfig->getBaseType(), $topic, $data);
+                        setContextValue("msgId", $msgId);
+                        setContextValue("qos", $publish->getQos());
                         return $clientData;
-                    }
-                    switch ($qos) {
-                        case 1:
-                            $puback = new PUBACK($this);
-                            $puback->setMsgID($msgId);
-                            $this->autoBoostSend($fd, $puback);
-                            break;
-                        case 2:
-                            $pubrec = new PUBREC($this);
-                            $pubrec->setMsgID($msgId);
-                            $this->autoBoostSend($fd, $pubrec);
-                            break;
                     }
                 }
                 break;
