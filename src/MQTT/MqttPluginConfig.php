@@ -35,7 +35,7 @@ class MqttPluginConfig extends BaseConfig
      * 当useRoute被设置为true时才有效，返回给客户端消息所使用的topic名称
      * @var string
      */
-    protected $serverTopic = '$SERVER';
+    protected $serverTopic = '$SERVER_RPC';
 
     public function __construct()
     {
