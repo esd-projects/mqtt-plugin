@@ -358,6 +358,7 @@ class MQTT implements IMqtt
         if (empty($this->clientid)) {
             $this->clientid = Utility::genClientId();
         }
+        $connectobj->setClientId($this->clientid);
         Debug::Log(Debug::DEBUG, 'connect(): clientid=' . $this->clientid);
 
         $connectobj->setKeepalive($this->keepalive);
