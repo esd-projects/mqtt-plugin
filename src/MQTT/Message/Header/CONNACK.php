@@ -6,6 +6,7 @@
 
 namespace ESD\Plugins\MQTT\Message\Header;
 use ESD\Plugins\MQTT\Debug;
+use ESD\Plugins\MQTT\Exception\ConnectError;
 use ESD\Plugins\MQTT\MqttException;
 
 
@@ -86,7 +87,7 @@ class CONNACK extends Base
              If a server sends a CONNACK packet containing a non-zero return code it MUST
              then close the Network Connection [MQTT-3.2.2-5]
              */
-            throw new Exception\ConnectError($error);
+            throw new ConnectError($error);
         }
 
         if ($this->session_present) {

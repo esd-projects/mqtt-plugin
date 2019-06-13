@@ -81,9 +81,17 @@ class Debug
         }
 
         if ($priority <= self::$priority) {
-            Server::$instance->getLog()->warning($message);
+            if(Server::$instance==null){
+                print_r($message."\n");
+            }else {
+                Server::$instance->getLog()->warning($message);
+            }
         } else {
-            Server::$instance->getLog()->debug($message);
+            if(Server::$instance==null) {
+                print_r($message."\n");
+            }else{
+                Server::$instance->getLog()->debug($message);
+            }
         }
     }
 }

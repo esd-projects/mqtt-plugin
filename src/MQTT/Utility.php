@@ -493,6 +493,11 @@ class Utility
 
         return true;
     }
+
+    public static function genClientId()
+    {
+        return 'mqtt' . substr(md5(uniqid('mqtt', true)), 8, 16);
+    }
 }
 
 # EOF

@@ -44,6 +44,12 @@ class MqttPack implements IPack, IMqtt
      */
     protected $mqttAuth;
 
+    /**
+     * @Inject()
+     * @var MqttPluginConfig
+     */
+    protected $mqttConfig;
+
     public function encode(string $buffer)
     {
 
@@ -106,7 +112,22 @@ class MqttPack implements IPack, IMqtt
                             $this->autoBoostSend($fd, $connack);
                         }
                     } else {
-                        $connack->setReturnCode(0x05);
+                        if ($this->mqttConfig->isAllowAnonymousAccess()) {
+                            if (empty($connect->client_id)) {
+                                if ($connect->getClean() == 0) {
+                                    $connack->setReturnCode(0x02);
+                                    $connack->setSessionPresent(0);
+                                    $this->autoBoostSend($fd, $connack);
+                                    Server::$instance->closeFd($fd);
+                                    break;
+                                }
+                                $connect->client_id = Utility::genClientId();
+                            }
+                            $connack->setReturnCode(0);
+                            $this->bindUid($fd, $connect->client_id);
+                        } else {
+                            $connack->setReturnCode(0x05);
+                        }
                         $connack->setSessionPresent(0);
                         $this->autoBoostSend($fd, $connack);
                     }
@@ -178,6 +199,7 @@ class MqttPack implements IPack, IMqtt
                 Server::$instance->closeFd($fd);
                 break;
         }
+        return null;
     }
 
 

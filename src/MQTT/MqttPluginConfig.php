@@ -16,6 +16,11 @@ class MqttPluginConfig extends BaseConfig
 {
     const key = "mqtt";
     /**
+     * 允许匿名登录
+     * @var bool
+     */
+    protected $allowAnonymousAccess = true;
+    /**
      * @var string
      */
     protected $mqttAuthClass = EasyMqttAuth::class;
@@ -39,5 +44,21 @@ class MqttPluginConfig extends BaseConfig
     public function setMqttAuthClass(string $mqttAuthClass): void
     {
         $this->mqttAuthClass = $mqttAuthClass;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowAnonymousAccess(): bool
+    {
+        return $this->allowAnonymousAccess;
+    }
+
+    /**
+     * @param bool $allowAnonymousAccess
+     */
+    public function setAllowAnonymousAccess(bool $allowAnonymousAccess): void
+    {
+        $this->allowAnonymousAccess = $allowAnonymousAccess;
     }
 }

@@ -6,9 +6,7 @@
  * Time: 11:41
  */
 
-namespace sskaje\mqtt;
-
-use ESD\Plugins\MQTT\Debug;
+namespace ESD\Plugins\MQTT;
 
 /**
  * Socket Client
@@ -35,14 +33,17 @@ class SocketClient
      * @var resource
      */
     protected $context;
+
     public function __construct($address)
     {
         $this->address = $address;
     }
+
     public function __destruct()
     {
         $this->close();
     }
+
     /**
      * Get Server Address
      *
@@ -52,15 +53,17 @@ class SocketClient
     {
         return $this->address;
     }
+
     /**
      * Set Stream Context
      *
-     * @param resource $context    A valid context resource created with stream_context_create()
+     * @param resource $context A valid context resource created with stream_context_create()
      */
     public function setContext($context)
     {
         $this->context = $context;
     }
+
     /**
      * create socket
      * @return bool
@@ -73,7 +76,7 @@ class SocketClient
         } else {
             $context = $this->context;
         }
-        Debug::Log(Debug::DEBUG, 'socket_connect(): connect to='.$this->address);
+        Debug::Log(Debug::DEBUG, 'socket_connect(): connect to=' . $this->address);
         $this->socket = stream_socket_client(
             $this->address,
             $errno,
@@ -86,11 +89,12 @@ class SocketClient
             Debug::Log(Debug::DEBUG, "stream_socket_client() {$errno}, {$errstr}");
             return false;
         }
-        stream_set_timeout($this->socket,  5);
+        stream_set_timeout($this->socket, 5);
         #TODO:  MUST BE IN BLOCKING MODE
         #$this->set_blocking();
         return true;
     }
+
     /**
      * Set Blocking Mode
      */
@@ -101,6 +105,7 @@ class SocketClient
         stream_set_blocking($this->socket, true);
         return true;
     }
+
     /**
      * Set Non-Blocking Mode
      */
@@ -111,11 +116,12 @@ class SocketClient
         stream_set_blocking($this->socket, false);
         return true;
     }
+
     /**
      * Send data
      *
      * @param string $packet
-     * @param int    $packet_size
+     * @param int $packet_size
      * @return int
      */
     public function write($packet, $packet_size)
@@ -124,6 +130,7 @@ class SocketClient
         Debug::Log(Debug::DEBUG, "socket_write(length={$packet_size})", $packet);
         return fwrite($this->socket, $packet, $packet_size);
     }
+
     /**
      * Read data
      *
@@ -136,12 +143,13 @@ class SocketClient
         Debug::Log(Debug::DEBUG, "socket_read({$length})");
         $string = "";
         $togo = $length;
-        while (!feof($this->socket) && $togo>0) {
+        while (!feof($this->socket) && $togo > 0) {
             $togo = $length - strlen($string);
-            if($togo) $string .= fread($this->socket, $togo);
+            if ($togo) $string .= fread($this->socket, $togo);
         }
         return $string;
     }
+
     /**
      * Close socket
      *
@@ -155,6 +163,7 @@ class SocketClient
         }
         return true;
     }
+
     /**
      * Is EOF
      *
@@ -164,6 +173,7 @@ class SocketClient
     {
         return feof($this->socket);
     }
+
     /**
      * stream_select
      *

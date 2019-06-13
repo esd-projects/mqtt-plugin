@@ -42,14 +42,13 @@ use ESD\Plugins\MQTT\Exception\ConnectError;
 use ESD\Plugins\MQTT\Exception\NetworkError;
 use ESD\Plugins\MQTT\Message\Base;
 use ESD\Plugins\MQTT\Message\Will;
-use sskaje\mqtt\SocketClient;
 
 /**
  * Class MQTT
  *
  * @package sskaje\mqtt
  */
-class MQTT
+class MQTT implements IMqtt
 {
     /**
      * Client ID
@@ -357,7 +356,7 @@ class MQTT
 
         # default client id
         if (empty($this->clientid)) {
-            $this->clientid = 'mqtt' . substr(md5(uniqid('mqtt', true)), 8, 16);
+            $this->clientid = Utility::genClientId();
         }
         Debug::Log(Debug::DEBUG, 'connect(): clientid=' . $this->clientid);
 
@@ -392,7 +391,6 @@ class MQTT
 
         # Call connect
         $this->call_handler('connack', array($this, $connackobj));
-
         return $connackobj;
     }
 
@@ -435,7 +433,7 @@ class MQTT
             $this->disconnect();
             $this->socket->close();
         }
-
+        $this->count_eof = 0;
         return $this->connect();
     }
 
@@ -1101,50 +1099,48 @@ class MQTT
 
     /**
      * Main Loop
-     *
-     * @return bool
      * @throws \Exception
      */
     public function loop()
     {
-        Debug::Log(Debug::DEBUG, 'loop()');
+        go(function () {
+            Debug::Log(Debug::DEBUG, 'loop()');
 
-        while (true) {
-            # check if any commands awaits or topics to subscribe
-            if (!$this->cmdstore->countWaits() && empty($this->topics) && empty($this->topics_to_subscribe)) {
-                Debug::Log(Debug::INFO, "loop(): No tasks, leaving...");
-                break;
+            while (true) {
+                # check if any commands awaits or topics to subscribe
+                if (!$this->cmdstore->countWaits() && empty($this->topics) && empty($this->topics_to_subscribe)) {
+                    Debug::Log(Debug::INFO, "loop(): No tasks, leaving...");
+                    break;
+                }
+
+                # Subscribe topics
+                if (!empty($this->topics_to_subscribe)) {
+                    list($last_subscribe_msgid, $last_subscribe_topics) = $this->do_subscribe();
+                    $this->subscribe_awaits[$last_subscribe_msgid] = $last_subscribe_topics;
+                }
+                # Unsubscribe topics
+                if (!empty($this->topics_to_unsubscribe)) {
+                    list($last_unsubscribe_msgid, $last_unsubscribe_topics) = $this->do_unsubscribe();
+                    $this->unsubscribe_awaits[$last_unsubscribe_msgid] = $last_unsubscribe_topics;
+                }
+
+                try {
+                    # It is the responsibility of the Client to ensure that the interval between Control Packets
+                    # being sent does not exceed the Keep Alive value. In the absence of sending any other Control
+                    # Packets, the Client MUST send a PINGREQ Packet [MQTT-3.1.2-23].
+                    $this->keepalive();
+
+                    $this->handle_message();
+
+                } catch (NetworkError $e) {
+                    Debug::Log(Debug::INFO, 'loop(): Connection lost.');
+                    $this->reconnect();
+                    $this->subscribe($this->topics);
+                } catch (\Exception $e) {
+                    throw $e;
+                }
             }
-
-            # Subscribe topics
-            if (!empty($this->topics_to_subscribe)) {
-                list($last_subscribe_msgid, $last_subscribe_topics) = $this->do_subscribe();
-                $this->subscribe_awaits[$last_subscribe_msgid] = $last_subscribe_topics;
-            }
-            # Unsubscribe topics
-            if (!empty($this->topics_to_unsubscribe)) {
-                list($last_unsubscribe_msgid, $last_unsubscribe_topics) = $this->do_unsubscribe();
-                $this->unsubscribe_awaits[$last_unsubscribe_msgid] = $last_unsubscribe_topics;
-            }
-
-            try {
-                # It is the responsibility of the Client to ensure that the interval between Control Packets
-                # being sent does not exceed the Keep Alive value. In the absence of sending any other Control
-                # Packets, the Client MUST send a PINGREQ Packet [MQTT-3.1.2-23].
-                $this->keepalive();
-
-                $this->handle_message();
-
-            } catch (NetworkError $e) {
-                Debug::Log(Debug::INFO, 'loop(): Connection lost.');
-                $this->reconnect();
-                $this->subscribe($this->topics);
-            } catch (\Exception $e) {
-                throw $e;
-            }
-        }
-
-        return true;
+        });
     }
 
     protected $last_ping_time = 0;
