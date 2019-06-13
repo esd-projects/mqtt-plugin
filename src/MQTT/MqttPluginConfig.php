@@ -11,6 +11,7 @@ namespace ESD\Plugins\MQTT;
 
 use ESD\Core\Plugins\Config\BaseConfig;
 use ESD\Plugins\MQTT\Auth\EasyMqttAuth;
+use ESD\Plugins\MQTT\Handler\NonHandler;
 
 class MqttPluginConfig extends BaseConfig
 {
@@ -41,6 +42,12 @@ class MqttPluginConfig extends BaseConfig
      * @var string
      */
     protected $serverTopic = '$SERVER_RPC';
+
+    /**
+     * 当useRoute被设置为true时才有效，消息的解包类
+     * @var string
+     */
+    protected $messageHandleClass = NonHandler::class;
 
     public function __construct()
     {
@@ -125,5 +132,21 @@ class MqttPluginConfig extends BaseConfig
     public function setServerQos(int $serverQos): void
     {
         $this->serverQos = $serverQos;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessageHandleClass(): string
+    {
+        return $this->messageHandleClass;
+    }
+
+    /**
+     * @param string $messageHandleClass
+     */
+    public function setMessageHandleClass(string $messageHandleClass): void
+    {
+        $this->messageHandleClass = $messageHandleClass;
     }
 }

@@ -13,6 +13,7 @@ use DI\Annotation\Inject;
 use ESD\Core\Server\Config\PortConfig;
 use ESD\Core\Server\Server;
 use ESD\Plugins\MQTT\Auth\MqttAuth;
+use ESD\Plugins\MQTT\Handler\Handler;
 use ESD\Plugins\MQTT\Message\Base;
 use ESD\Plugins\MQTT\Message\CONNACK;
 use ESD\Plugins\MQTT\Message\CONNECT;
@@ -49,6 +50,17 @@ class MqttPack implements IPack, IMqtt
      * @var MqttPluginConfig
      */
     protected $mqttConfig;
+    /**
+     * @var Handler
+     */
+    private $handler;
+
+
+    public function __construct()
+    {
+        Server::$instance->getContainer()->injectOn($this);
+        $this->handler = DIGet($this->mqttConfig->getMessageHandleClass());
+    }
 
     public function encode(string $buffer)
     {
@@ -79,7 +91,8 @@ class MqttPack implements IPack, IMqtt
                 $message->setTopic($this->mqttConfig->getServerTopic() . "/" . getContextValue("uid"));
                 $message->setQos(getContextValue("qos"));
                 $message->setMsgID(getContextValue("msgId"));
-            }else{
+                $data = $this->handler->pack($data);
+            } else {
                 $message->setTopic($topic);
             }
             $message->setMessage($data);
@@ -167,7 +180,7 @@ class MqttPack implements IPack, IMqtt
                         }
                     } else {
                         //这里将会当做路由信息
-                        $clientData = new ClientData($fd, $portConfig->getBaseType(), $topic, $data);
+                        $clientData = new ClientData($fd, $portConfig->getBaseType(), $topic, $this->handler->upPack($data));
                         setContextValue("msgId", $msgId);
                         setContextValue("qos", $publish->getQos());
                         return $clientData;
