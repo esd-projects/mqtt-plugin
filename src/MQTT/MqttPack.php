@@ -79,6 +79,8 @@ class MqttPack implements IPack, IMqtt
                 $message->setTopic($this->mqttConfig->getServerTopic() . "/" . getContextValue("uid"));
                 $message->setQos(getContextValue("qos"));
                 $message->setMsgID(getContextValue("msgId"));
+            }else{
+                $message->setTopic($topic);
             }
             $message->setMessage($data);
             $data = $message->build();
