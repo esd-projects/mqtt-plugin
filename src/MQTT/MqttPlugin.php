@@ -28,6 +28,7 @@ class MqttPlugin extends AbstractPlugin
     public function __construct(?MqttPluginConfig $mqttPluginConfig = null)
     {
         parent::__construct();
+        Debug::Disable();
         $this->atBefore(PackPlugin::class);
         if ($mqttPluginConfig == null) {
             $mqttPluginConfig = new MqttPluginConfig();
@@ -39,10 +40,12 @@ class MqttPlugin extends AbstractPlugin
      * @param Context $context
      * @return mixed|void
      * @throws \ReflectionException
+     * @throws \ESD\Core\Plugins\Config\ConfigException
      */
     public function init(Context $context)
     {
         parent::init($context);
+        $this->mqttPluginConfig->merge();
         $authRc = new \ReflectionClass($this->mqttPluginConfig->getMqttAuthClass());
         $authAmpl = $authRc->newInstance();
         $this->setToDIContainer(MqttAuth::class, $authAmpl);

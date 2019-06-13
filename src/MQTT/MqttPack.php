@@ -73,7 +73,9 @@ class MqttPack implements IPack, IMqtt
             $data = $data->build();
         } else {
             $message = new Message\PUBLISH($this);
-            $message->setTopic($topic);
+            if ($topic == null && $this->mqttConfig->isUseRoute()) {
+                $message->setTopic($this->mqttConfig->getServerTopic());
+            }
             $message->setDup(0);
             $message->setQos(0);
             $message->setMessage($data);
@@ -89,6 +91,7 @@ class MqttPack implements IPack, IMqtt
      * @return ClientData|null
      * @throws MqttException
      * @throws \ESD\Plugins\ProcessRPC\ProcessRPCException
+     * @throws \ESD\Core\Plugins\Config\ConfigException
      */
     public function unPack(int $fd, string $data, PortConfig $portConfig): ?ClientData
     {
@@ -140,7 +143,13 @@ class MqttPack implements IPack, IMqtt
                     $topic = $publish->getTopic();
                     $data = $publish->getMessage();
                     $msgId = $publish->getMsgID();
-                    $this->autoBoostSend($fd, $data, $topic);
+                    if (!$this->mqttConfig->isUseRoute()) {
+                        $this->pub($topic, $data);
+                    } else {
+                        //这里将会当做路由信息
+                        $clientData = new ClientData($fd, $portConfig->getBaseType(), $topic, $data);
+                        return $clientData;
+                    }
                     switch ($qos) {
                         case 1:
                             $puback = new PUBACK($this);

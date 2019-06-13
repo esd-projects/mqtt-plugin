@@ -18,46 +18,56 @@ class MqttMessageHandle implements MessageHandler
 
     public function connack(MQTT $mqtt, Message\CONNACK $connack_object)
     {
-        // TODO: Implement connack() method.
+        var_dump("connack");
     }
 
     public function disconnect(MQTT $mqtt)
     {
-        // TODO: Implement disconnect() method.
+        var_dump("disconnect");
     }
 
     public function suback(MQTT $mqtt, Message\SUBACK $suback_object)
     {
-        // TODO: Implement suback() method.
+        var_dump("suback");
     }
 
     public function unsuback(MQTT $mqtt, Message\UNSUBACK $unsuback_object)
     {
-        // TODO: Implement unsuback() method.
+        var_dump("unsuback");
     }
 
     public function publish(MQTT $mqtt, Message\PUBLISH $publish_object)
     {
-        // TODO: Implement publish() method.
+        var_dump($publish_object->getMessage());
     }
 
     public function puback(MQTT $mqtt, Message\PUBACK $puback_object)
     {
-        // TODO: Implement puback() method.
+        var_dump("puback");
     }
 
     public function pubrec(MQTT $mqtt, Message\PUBREC $pubrec_object)
     {
-        // TODO: Implement pubrec() method.
+        var_dump("pubrec");
     }
 
     public function pubrel(MQTT $mqtt, Message\PUBREL $pubrel_object)
     {
-        // TODO: Implement pubrel() method.
+        var_dump("pubrel");
     }
 
     public function pubcomp(MQTT $mqtt, Message\PUBCOMP $pubcomp_object)
     {
-        // TODO: Implement pubcomp() method.
+        var_dump("pubcomp");
+    }
+
+    public function pingreq(MQTT $mqtt, Message\PINGREQ $pubcomp_object)
+    {
+        var_dump("pingreq");
+    }
+
+    public function pingresp(MQTT $mqtt, Message\PINGRESP $pubcomp_object)
+    {
+        var_dump("pingresp");
     }
 }

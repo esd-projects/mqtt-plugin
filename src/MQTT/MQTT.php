@@ -313,13 +313,21 @@ class MQTT implements IMqtt
         return $pi;
     }
 
+    public function connectAndLoop()
+    {
+        $this->_connect();
+        go(function () {
+            $this->_loop();
+        });
+    }
+
     /**
      * Connect to broker
      * s*
      * @return Message\CONNACK
      * @throws MqttException
      */
-    public function connect()
+    protected function _connect()
     {
         /*
          The Server MUST process a second CONNECT Packet sent from a Client as a protocol violation
@@ -435,64 +443,7 @@ class MQTT implements IMqtt
             $this->socket->close();
         }
         $this->count_eof = 0;
-        return $this->connect();
-    }
-
-    /**
-     * Publish Message to topic synchronized
-     *
-     * @param string $topic
-     * @param string $message
-     * @param int $qos
-     * @param int $retain
-     * @param int    & $msgid
-     * @return array|bool
-     * @throws MqttException
-     * @throws NetworkError
-     */
-    public function publish_sync($topic, $message, $qos = 0, $retain = 0, &$msgid = 0)
-    {
-        # set default call_handler
-
-        # initial dup = 0
-        $dup = 0;
-        # initial msgid = 0
-        $msgid = 0;
-
-        # non blocking
-        $this->socket->set_non_blocking();
-
-        $r = $this->do_publish($topic, $message, $qos, $retain, $msgid, $dup);
-
-        if ($qos == 0) {
-            return $r['ret'];
-        }
-
-        # loop
-        do {
-            $r = $this->handle_message();
-            if (!$r) {
-                usleep(10000);
-                continue;
-            }
-
-            $finished = $qos == 1 ?
-                $this->cmdstore->isEmpty(Message::PUBACK, $msgid) :
-                (
-                    $this->cmdstore->isEmpty(Message::PUBREC, $msgid) &&
-                    $this->cmdstore->isEmpty(Message::PUBCOMP, $msgid)
-                );
-
-            if (!$finished) {
-                # retry publish
-                $this->handle_publish($msgid);
-            } else {
-                return true;
-            }
-
-        } while (true);
-
-        return false;
+        return $this->_connect();
     }
 
     /**
@@ -502,10 +453,11 @@ class MQTT implements IMqtt
      * @param string $message
      * @param int $qos
      * @param int $retain
+     * @param null $msgid
      * @return array|bool
      * @throws MqttException
      */
-    public function publish_async($topic, $message, $qos = 0, $retain = 0, &$msgid = null)
+    public function publish($topic, $message, $qos = 0, $retain = 0, &$msgid = null)
     {
         # non blocking
         $this->socket->set_non_blocking();
@@ -632,6 +584,8 @@ class MQTT implements IMqtt
     protected $topics_to_unsubscribe = array();
 
     /**
+     * $topics['mqtttest/#'] = 2;
+     * $mqtt2->subscribe($topics);
      * SUBSCRIBE
      *
      * @param array $topics array($topic_filter => $topic_qos)
@@ -1102,46 +1056,37 @@ class MQTT implements IMqtt
      * Main Loop
      * @throws \Exception
      */
-    public function loop()
+    protected function _loop($first = false)
     {
-        go(function () {
-            Debug::Log(Debug::DEBUG, 'loop()');
-
-            while (true) {
-                # check if any commands awaits or topics to subscribe
-                if (!$this->cmdstore->countWaits() && empty($this->topics) && empty($this->topics_to_subscribe)) {
-                    Debug::Log(Debug::INFO, "loop(): No tasks, leaving...");
-                    break;
-                }
-
-                # Subscribe topics
-                if (!empty($this->topics_to_subscribe)) {
-                    list($last_subscribe_msgid, $last_subscribe_topics) = $this->do_subscribe();
-                    $this->subscribe_awaits[$last_subscribe_msgid] = $last_subscribe_topics;
-                }
-                # Unsubscribe topics
-                if (!empty($this->topics_to_unsubscribe)) {
-                    list($last_unsubscribe_msgid, $last_unsubscribe_topics) = $this->do_unsubscribe();
-                    $this->unsubscribe_awaits[$last_unsubscribe_msgid] = $last_unsubscribe_topics;
-                }
-
-                try {
-                    # It is the responsibility of the Client to ensure that the interval between Control Packets
-                    # being sent does not exceed the Keep Alive value. In the absence of sending any other Control
-                    # Packets, the Client MUST send a PINGREQ Packet [MQTT-3.1.2-23].
-                    $this->keepalive();
-
-                    $this->handle_message();
-
-                } catch (NetworkError $e) {
-                    Debug::Log(Debug::INFO, 'loop(): Connection lost.');
-                    $this->reconnect();
-                    $this->subscribe($this->topics);
-                } catch (\Exception $e) {
-                    throw $e;
-                }
+        Debug::Log(Debug::DEBUG, 'loop()');
+        while (!$first) {
+            # Subscribe topics
+            if (!empty($this->topics_to_subscribe)) {
+                list($last_subscribe_msgid, $last_subscribe_topics) = $this->do_subscribe();
+                $this->subscribe_awaits[$last_subscribe_msgid] = $last_subscribe_topics;
             }
-        });
+            # Unsubscribe topics
+            if (!empty($this->topics_to_unsubscribe)) {
+                list($last_unsubscribe_msgid, $last_unsubscribe_topics) = $this->do_unsubscribe();
+                $this->unsubscribe_awaits[$last_unsubscribe_msgid] = $last_unsubscribe_topics;
+            }
+
+            try {
+                # It is the responsibility of the Client to ensure that the interval between Control Packets
+                # being sent does not exceed the Keep Alive value. In the absence of sending any other Control
+                # Packets, the Client MUST send a PINGREQ Packet [MQTT-3.1.2-23].
+                $this->keepalive();
+
+                $this->handle_message();
+
+            } catch (NetworkError $e) {
+                Debug::Log(Debug::INFO, 'loop(): Connection lost.');
+                $this->reconnect();
+                $this->subscribe($this->topics);
+            } catch (\Exception $e) {
+                throw $e;
+            }
+        }
     }
 
     protected $last_ping_time = 0;

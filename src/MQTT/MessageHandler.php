@@ -27,6 +27,10 @@ interface MessageHandler
 
     public function pubcomp(MQTT $mqtt, Message\PUBCOMP $pubcomp_object);
 
+    public function pingreq(MQTT $mqtt, Message\PINGREQ $pubcomp_object);
+
+    public function pingresp(MQTT $mqtt, Message\PINGRESP $pubcomp_object);
+
 }
 
 # EOF
