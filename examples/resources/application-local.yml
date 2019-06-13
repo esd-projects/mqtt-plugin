@@ -1,0 +1,22 @@
+reload:
+  enable: false
+
+aop:
+  include_paths:
+    - ${ROOT_DIR}/examples/src
+
+scan:
+  include_paths:
+    - ${ROOT_DIR}/examples/src
+
+mysql:
+  default:
+    host: 'mysql-aliyun.dev.svc.cluster.local'
+    username: 'huiyi'
+    password: 'huiyi@123'
+    db: 'huiyi_analysis'
+    prefix: "t_"
+
+redis:
+  default:
+    host: 'redis-master.dev.svc.cluster.local'

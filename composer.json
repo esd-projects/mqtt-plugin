@@ -5,9 +5,13 @@
     "esd/uid-plugin": "~0.1",
     "esd/topic-plugin": "~0.1"
   },
+  "require-dev": {
+    "esd/esd-server": "~0.1"
+  },
   "autoload": {
     "psr-4": {
-      "ESD\\Plugins\\": "src/"
+      "ESD\\Plugins\\": "src/",
+      "ESD\\Plugins\\MQTT\\ExampleClass\\": "examples/src/"
     }
   },
   "authors": [
