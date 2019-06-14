@@ -10,8 +10,11 @@ namespace ESD\Plugins\MQTT;
 
 use ESD\Core\Context\Context;
 use ESD\Core\PlugIn\AbstractPlugin;
+use ESD\Core\PlugIn\PluginInterfaceManager;
 use ESD\Plugins\MQTT\Auth\MqttAuth;
 use ESD\Plugins\Pack\PackPlugin;
+use ESD\Plugins\Topic\TopicPlugin;
+use ESD\Plugins\Uid\UidPlugin;
 
 class MqttPlugin extends AbstractPlugin
 {
@@ -34,6 +37,22 @@ class MqttPlugin extends AbstractPlugin
             $mqttPluginConfig = new MqttPluginConfig();
         }
         $this->mqttPluginConfig = $mqttPluginConfig;
+    }
+
+    /**
+     * @param PluginInterfaceManager $pluginInterfaceManager
+     * @return mixed|void
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     * @throws \ESD\Core\Exception
+     * @throws \ReflectionException
+     */
+    public function onAdded(PluginInterfaceManager $pluginInterfaceManager)
+    {
+        parent::onAdded($pluginInterfaceManager);
+        $pluginInterfaceManager->addPlug(new UidPlugin());
+        $pluginInterfaceManager->addPlug(new TopicPlugin());
+        $pluginInterfaceManager->addPlug(new PackPlugin());
     }
 
     /**
